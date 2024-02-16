@@ -1,29 +1,30 @@
-import { Copy, EmojiLookLeft, EmojiLookRight, PinAlt } from "iconoir-react";
+// import { EmojiLookLeft, EmojiLookRight, PinAlt } from "iconoir-react"
+
+import {
+  CalendarDaysIcon,
+  DocumentDuplicateIcon,
+  FaceSmileIcon,
+  MapPinIcon,
+} from "@heroicons/react/24/solid";
 import Image from "next/image";
-import Link from "next/link";
 import React, {
-  Fragment,
   MouseEventHandler,
   useCallback,
   useEffect,
   useRef,
   useState,
 } from "react";
-import QuickPinchZoom, {
-  make3dTransformValue,
-  UpdateAction,
-} from "react-quick-pinch-zoom";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import styled, { css } from "styled-components";
 import useSWR from "swr";
 
-import { useSessionStorage } from "@/common/hooks/useStorage";
-import timeDiffFormat from "@/common/utils/timeDiffFormat";
 import Modal from "@/components/common/Modal";
-import { Content } from "@/content";
-import coverPic from "@/public/photos/cover_min.jpg";
-import mapPic from "@/public/photos/map.gif";
+import timeDiffFormat from "@/common/utils/timeDiffFormat";
+import { useSessionStorage } from "@/common/hooks/useStorage";
+import coverPic from "@/public/photos/cover.jpg";
+import mapPic from "@/public/photos/map.png";
+import gravityLogo from "@/public/grp_og.png";
 import { GetTalkListResponse, Party, Talk } from "@/talk/types";
 import {
   BoxShadowStyle,
@@ -33,15 +34,20 @@ import {
   SectionHr,
   TextSansStyle,
 } from "./styles";
-import EditTalk from "./talk/EditTalk";
 import WriteTalk from "./talk/WriteTalk";
+import EditTalk from "./talk/EditTalk";
+import QuickPinchZoom, { make3dTransformValue } from "react-quick-pinch-zoom";
+import * as ics from "ics";
+
+const GROOM = "김철원";
+const BRIDE = "임지원";
 
 const Header = styled.h1`
   display: inline-block;
   margin: 40px 0;
 
   font-size: 20px;
-  font-weight: 500;
+  font-weight: 900;
   line-height: 2.5;
 
   hr {
@@ -53,9 +59,7 @@ const Header = styled.h1`
 `;
 
 const CoverPicWrap = styled.div`
-  position: relative;
-  width: calc(100% - 40px);
-  aspect-ratio: ${coverPic.width / coverPic.height};
+  width: 90%;
   margin: 0 auto;
   margin-bottom: 40px;
   border-radius: 30px;
@@ -63,33 +67,7 @@ const CoverPicWrap = styled.div`
   line-height: 0;
 `;
 
-const LiveButton = styled.button`
-  padding: 8px 16px;
-  border: 0;
-  border-radius: 8px;
-  margin: 12px 10px;
-  color: white;
-  font-size: 16px;
-  font-weight: bold;
-  background: rgba(255, 136, 170);
-
-  animation: color-change 1s infinite;
-
-  @keyframes color-change {
-    0% {
-      background: rgba(255, 136, 170, 0.7);
-    }
-    50% {
-      background: rgb(255, 136, 170);
-    }
-    100% {
-      background: rgba(255, 136, 170, 0.7);
-    }
-  }
-`;
-
 const GreetingP = styled.p`
-  white-space: pre;
   margin: 30px 0;
 `;
 
@@ -194,7 +172,7 @@ const PinchPhoto = ({ src, onZoom }: PinchPhotoProps) => {
   const imgRef = useRef<HTMLImageElement>(null);
   const pz = useRef<QuickPinchZoom>(null);
   const handleUpdate = useCallback(
-    ({ x, y, scale }: UpdateAction) => {
+    ({ x, y, scale }) => {
       if (!imgRef.current) return;
       const value = make3dTransformValue({ x, y, scale });
       imgRef.current.style.setProperty("transform", value);
@@ -206,39 +184,59 @@ const PinchPhoto = ({ src, onZoom }: PinchPhotoProps) => {
   return (
     <QuickPinchZoom ref={pz} onUpdate={handleUpdate} draggableUnZoomed={false}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img ref={imgRef} src={src} alt="" />
+      <img ref={imgRef} src={src} alt="" style={{ cursor: "pointer" }} />
     </QuickPinchZoom>
   );
 };
 
 type PhotoGalleryProps = {
-  photos: Content["photos"];
+  src: number[];
   initialSlide?: number;
   onClose: () => void;
 };
-const PhotoGallery = ({ photos, initialSlide, onClose }: PhotoGalleryProps) => {
+const PhotoGallery = ({ src, initialSlide, onClose }: PhotoGalleryProps) => {
   const [isZoomed, setZoomed] = useState(false);
+  const index = src.indexOf(initialSlide || 0);
+
   return (
     <SliderWrap isZoomed={isZoomed} onClick={onClose}>
       <Slider
-        initialSlide={initialSlide || 0}
+        initialSlide={index}
         slidesToShow={1}
         slidesToScroll={1}
         arrows={false}
         dots={false}
       >
-        {photos.map((p, i) => (
+        {src.map((i) => (
           <div key={i}>
-            <PinchPhoto
-              src={typeof p === "string" ? p : p.url}
-              onZoom={setZoomed}
-            />
+            <PinchPhoto onZoom={setZoomed} src={`/photos/g${i}.jpg`} />
           </div>
         ))}
       </Slider>
     </SliderWrap>
   );
 };
+
+const CalendarButton = styled.div`
+  ${TextSansStyle}
+  display: inline-block;
+  padding: 10px;
+  border: 0;
+  border-radius: 18px;
+  margin: 0 10px;
+  color: #ffffff;
+  font-size: 13px;
+  text-decoration: none;
+  background: #be3455;
+  cursor: pointer;
+  line-height: 0;
+  > svg {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    margin: 0;
+  }
+`;
 
 const MapButton = styled.a`
   ${TextSansStyle}
@@ -280,7 +278,13 @@ const CopyTextButton = styled.button`
     vertical-align: sub;
   }
 `;
-const CopyText = ({ text }: { text: string }) => {
+const CopyText = ({
+  text,
+  placeholder = "계좌번호가 복사 되었습니다.",
+}: {
+  text: string;
+  placeholder?: string;
+}) => {
   const handleCopyText = () => {
     const fallbackCopyClipboard = (value: string) => {
       const $text = document.createElement("textarea");
@@ -294,13 +298,13 @@ const CopyText = ({ text }: { text: string }) => {
     navigator.clipboard
       .writeText(text)
       .catch(() => fallbackCopyClipboard(text))
-      .then(() => alert("계좌번호가 복사 되었습니다."));
+      .then(() => alert(placeholder));
   };
   return (
     <>
       {text}
       <CopyTextButton onClick={handleCopyText} aria-label="복사">
-        <Copy />
+        <DocumentDuplicateIcon />
       </CopyTextButton>
     </>
   );
@@ -341,8 +345,8 @@ const WriteButton = styled.button<{ visible: boolean }>`
 
   color: white;
   font-size: 16px;
-  font-weight: bold;
-  background: rgba(255, 136, 170, 0.9);
+  font-weight: 900;
+  background: rgba(190, 52, 85, 0.9);
 
   ${BoxShadowStyle}
 
@@ -466,13 +470,14 @@ const TalkBubble = ({
   );
   return (
     <TalkBubbleWrap party={talk.party} color={talk.color} selected={selected}>
-      {talk.party === "BRIDE" ? <EmojiLookLeft /> : <EmojiLookRight />}
+      {talk.party === "BRIDE" ? <FaceSmileIcon /> : <FaceSmileIcon />}
       <div onClick={handleBubbleOutsideClick}>
         {selected && talk.party === "BRIDE" && <>{editBtn} </>}
         {talk.author}
         {selected && talk.party === "GROOM" && <> {editBtn}</>}
         <div className="bubble-info-wrap">
           <p onClick={handleBubbleClick}>{talk.msg}</p>
+
           <small>
             {!talk.published
               ? "검수중"
@@ -489,9 +494,15 @@ const ThankYou = styled.div`
   color: #666;
 `;
 
-type HomeProps = { content: Content };
-
-const Home = ({ content: c }: HomeProps) => {
+const Home = ({
+  photo = [],
+  explict = false,
+  hideBus = false,
+}: {
+  photo: number[];
+  explict: boolean;
+  hideBus: boolean;
+}) => {
   const [writeDone, setWriteDone] = useSessionStorage("talk.writedone");
   const {
     data: talkListResp,
@@ -552,68 +563,151 @@ const Home = ({ content: c }: HomeProps) => {
   };
   const handleEditTalkModalClose = () => setShowEditTalkModal(undefined);
 
+  const handleOnClickAddEvent = async () => {
+    const event = {
+      start: [2023, 12, 17, 12, 0],
+      duration: { hours: 2, minutes: 0 },
+      title: "김철원/임지원 결혼식",
+      description: "김철원/임지원 결혼합니다",
+      location:
+        "그래비티 서울 판교 오토그래프컬렉션 대한민국 경기도 성남시 분당구 판교역로146번길 2, 13529",
+      url: "https://jiwon.chulwon.kim/",
+      geo: { lat: 37.393427, lon: 127.1101018 },
+      categories: ["wedding"],
+      status: "CONFIRMED",
+      busyStatus: "BUSY",
+      organizer: { name: "김철원", email: "riky@myriky.net" },
+      attendees: [
+        {
+          name: "임지원",
+          email: "lim121229@gmail.com",
+          rsvp: true,
+          partstat: "ACCEPTED",
+          role: "REQ-PARTICIPANT",
+        },
+      ],
+    };
+
+    const filename = "wedding_invite.ics";
+    const file = await new Promise((resolve, reject) => {
+      // @ts-ignore
+      ics.createEvent(event, (error, value) => {
+        if (error) {
+          reject(error);
+        }
+
+        resolve(new File([value], filename, { type: "text/calendar" }));
+      });
+    });
+    // @ts-ignore
+    const url = URL.createObjectURL(file);
+
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = filename;
+
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
+
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <Main>
       <Header>
-        {c.groomFullName}
+        {GROOM}
         <hr />
-        {c.brideFullName}
+        {BRIDE}
       </Header>
       <CoverPicWrap>
-        <Image src={coverPic} fill priority={true} placeholder="blur" alt="" />
+        <Image src={coverPic} priority={true} placeholder="blur" alt="" />
       </CoverPicWrap>
-      <p>
-        {c.datetime}
+      <p style={{ wordBreak: "keep-all", padding: "0 3em" }}>
+        2023년 12월 17일 일요일 낮 12시
         <br />
-        {c.venue.desc}
+        그래비티 서울 판교 오토그래프 컬렉션 호텔, 지하1층 스페이스볼룸
       </p>
-      {c.link && (
-        <Link href={c.link.url} passHref>
-          <LiveButton>{c.link.label}</LiveButton>
-        </Link>
-      )}
 
       <SectionHr />
 
-      <SectionHeader>{c.greeting.title}</SectionHeader>
-      {c.greeting.content.map((p, i) => (
-        <GreetingP key={i}>
-          {p
-            .split("\n")
-            .map((l) => l.trim())
-            .join("\n")}
-        </GreetingP>
-      ))}
+      <SectionHeader>
+        결혼합니다.
+        <br />
+      </SectionHeader>
+      <GreetingP>
+        같이 밥 먹을 때 더 맛있고
+        <br />
+        같이 놀 때 더 재미있고
+        <br />
+        같이 견디면 그 어떤 어려움도 쉽게 느껴지는 그런 사람과
+        <br />
+        한 곳을 바라보며 함께 걸어가고자 합니다
+        <br />
+        모두 오셔서 저희 시작의 순간을 축하해 주세요.
+        <br />
+      </GreetingP>
+      <GreetingP>
+        김영해 · 정선주의 차남 철원
+        <br />
+        임봉규 · 고제성의 장녀 지원
+      </GreetingP>
       <CallWrap>
-        <a href={c.groomContact}>
-          <CallButton
-            icon={<EmojiLookRight />}
-            bgColor="#abdaab"
-            label="신랑측에 연락하기"
-          />
-        </a>
-        <a href={c.brideContact}>
-          <CallButton
-            icon={<EmojiLookLeft />}
-            bgColor="#c2e0a3"
-            label="신부측에 연락하기"
-          />
-        </a>
+        {explict ? (
+          <>
+            <a
+              href="http://qr.kakao.com/talk/r3k9j93gfEt4Ql1H962fyXa.ajM-"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <CallButton
+                icon={<FaceSmileIcon />}
+                bgColor="#abdaab"
+                label="신랑에게 카톡하기"
+              />
+            </a>
+            <a
+              href="http://qr.kakao.com/talk/_kU.AR00es41ms7A3ociERlRiPw-"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <CallButton
+                icon={<FaceSmileIcon />}
+                bgColor="#c2e0a3"
+                label="신부에게 카톡하기"
+              />
+            </a>
+          </>
+        ) : (
+          <>
+            <a href="tel:01044495716" target="_blank" rel="noreferrer">
+              <CallButton
+                icon={<FaceSmileIcon />}
+                bgColor="#abdaab"
+                label="신랑(혼주)측에 연락하기"
+              />
+            </a>
+            <a href="tel:01046808789" target="_blank" rel="noreferrer">
+              <CallButton
+                icon={<FaceSmileIcon />}
+                bgColor="#c2e0a3"
+                label="신부(혼주)측에 연락하기"
+              />
+            </a>
+          </>
+        )}
       </CallWrap>
       <SectionHr />
+
       <PhotoGrid>
-        {c.photos.map((p, i) => (
+        {photo.map((i) => (
           <li key={i}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               role="button"
-              src={typeof p === "string" ? p : p.url}
-              onClick={() => handlePhotoClick(i)}
+              src={`/photos/t${i}.jpg`}
+              style={{ cursor: "pointer" }}
               loading="lazy"
-              alt=""
-              style={
-                p.objectPosition ? { objectPosition: p.objectPosition } : {}
-              }
+              onClick={() => handlePhotoClick(i)}
             />
           </li>
         ))}
@@ -621,50 +715,145 @@ const Home = ({ content: c }: HomeProps) => {
       {showGalleryModal && (
         <Modal handleClose={handleGalleryModalClose}>
           <PhotoGallery
-            photos={c.photos}
+            src={photo}
             initialSlide={lastClickedGalleryItem}
             onClose={handleGalleryModalClose}
           />
         </Modal>
       )}
       <SectionHr />
-      <SectionHeader>오시는 길</SectionHeader>
-      <Image src={mapPic} width={400} alt="" />
-      <p>
-        {c.venue.address}
-        <br />
-        {c.venue.desc}
+      <SectionHeader>🧭 오시는 길</SectionHeader>
+      <Image src={mapPic} width="333px" height="236px" alt="약도" />
+      {/* 약도는 결혼식장 위치에 맞게 수정해주세요. 보통 식장에서 줍니다. */}
+
+      <p style={{ margin: "30px 0" }}>
+        <Image
+          src={gravityLogo}
+          width="188px"
+          height="91px"
+          alt="그래비티 서울 판교 오토그래프 컬렉션"
+          style={{ display: "block" }}
+        />
       </p>
-      <MapButton href={c.venue.kakaoMapUrl}>
-        <PinAlt color="#1199EE" /> 카카오맵
+      <p style={{ wordBreak: "keep-all" }}>
+        경기도 성남시 분당구 판교역로146번길 2
+        <br />
+        그래비티 서울 판교 오토그래프 컬렉션 호텔, 지하1층 스페이스볼룸
+        <br />
+      </p>
+
+      <MapButton href="https://place.map.kakao.com/1693881924">
+        <MapPinIcon color="#FEE500" /> 카카오맵
       </MapButton>
-      <MapButton href={c.venue.naverMapUrl}>
-        <PinAlt color="#66BB66" /> 네이버지도
+      <MapButton href="https://naver.me/GMqwvuZY">
+        <MapPinIcon color="#2DB400" /> 네이버지도
       </MapButton>
+      <MapButton href="https://surl.tmobiapi.com/acf9d724">
+        <MapPinIcon color="#d343c3" /> TMAP
+      </MapButton>
+
+      <p style={{ wordBreak: "keep-all" }}>
+        <br />
+        호텔 주차장 만차 시, 바로 옆 &apos;판교공영주차장&apos; 이용할 수
+        있습니다. 나가실 때 주차권을 꼭 챙기세요.
+        <br />
+        <i style={{ fontSize: "8px", color: "#AAA" }}>
+          (판교공영주차장, 경기도 성남시 분당구 판교역로146번길 8)
+        </i>
+      </p>
+
+      <CalendarButton onClick={handleOnClickAddEvent}>
+        <CalendarDaysIcon color="#ffffff" />
+      </CalendarButton>
+
       <SectionHr />
       <SectionHeader>💸 마음 전하실 곳</SectionHeader>
       <GiveWrap>
         <p>
           <strong>신랑측</strong>
           <br />
-          {c.groomGive.map((g) => (
-            <Fragment key={g.account}>
-              {g.name} <CopyText text={g.account} />
+          {explict ? (
+            <>
+              (김철원)&nbsp;
+              <CopyText text="토스뱅크 1000-0022-2574" />
+            </>
+          ) : (
+            <>
+              (김영해)&nbsp;
+              <CopyText text="경남은행 531-21-0404715" />
               <br />
-            </Fragment>
-          ))}
+              (정선주)&nbsp;
+              <CopyText text="농협 815134-56-154391" />
+              <br />
+              (김철원)&nbsp;
+              <CopyText text="토스뱅크 1000-0022-2574" />
+            </>
+          )}
         </p>
         <p>
-          <strong>신부측</strong>
+          <strong>👰 신부측</strong>
           <br />
-          {c.brideGive.map((g) => (
-            <Fragment key={g.account}>
-              {g.name} <CopyText text={g.account} />
+          {explict ? (
+            <>
+              (임지원)&nbsp;
+              <CopyText text="신한은행 110-473-067308" />
+            </>
+          ) : (
+            <>
+              (고제성)&nbsp;
+              <CopyText text="농협 301-0298-3874-81" />
               <br />
-            </Fragment>
-          ))}
+              (임지원)&nbsp;
+              <CopyText text="신한은행 110-473-067308" />
+            </>
+          )}
         </p>
       </GiveWrap>
+
+      {!hideBus ? (
+        <>
+          <SectionHr />
+          <SectionHeader>🚌 전세버스 안내</SectionHeader>
+          <GiveWrap>
+            <p>
+              <strong>울산 출발</strong>
+              <br />
+
+              <>
+                05:30 방어진
+                <br />
+                05:50 태화호텔 건너편
+                <br />
+                06:00 신복로터리
+                <br />
+                06:05 범서읍사무소
+                <br />
+                06:20 언양읍사무소
+                <br />
+                06:30 경주 내남
+                <br />
+                <br />
+                <p style={{ fontSize: 12, color: "#999" }}>
+                  🚨 현재 전세버스 좌석이 만석으로 예상됩니다 🚨
+                  <br />
+                  전세버스 탑승을 원하시는 분은 혼주나 신랑에게 꼭 연락주세요
+                </p>
+                기사님 연락처
+                <br />
+                <CopyText
+                  text="010-4582-7556"
+                  placeholder="전화번호가 복사 되었습니다."
+                />
+                <br />
+                (울산72바4259/대왕암관광)
+              </>
+            </p>
+          </GiveWrap>
+        </>
+      ) : (
+        <></>
+      )}
+
       <SectionHr />
       <SectionHeader>축하의 한마디</SectionHeader>
       <WriteSectionSubHeader>

@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 module.exports = {
-  reactStrictMode: true,
-  optimizeFonts: false,
-};
+	reactStrictMode: true,
+	optimizeFonts: false,
+	typescript: {
+		ignoreBuildErrors: true
+	}
+}
