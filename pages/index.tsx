@@ -32,8 +32,7 @@ const HomePage = ({ photo }: { photo: number[] }) => {
   const subtitle = `${GROOM} ♡ ${BRIDE} 청첩장`;
   const description = `5월 5일 낮 1시 30분 @ 루이비스 웨딩홀 중구점 - 충정로역`;
 
-  // FIXME: 도메인 변경
-  const domain = 'https://jiwon.chulwon.kim';
+  const domain = 'https://wedinv-eight.vercel.app/';
   return (
     <>
       <Head>
@@ -56,8 +55,8 @@ const HomePage = ({ photo }: { photo: number[] }) => {
 
         <meta property="og:description" content={description} />
         <meta name="twitter:description" content={description} />
-        <meta property="og:image" content={`${domain}/photos/cover_min.jpg`} />
-        <meta name="twitter:image" content={`${domain}/photos/cover_min.jpg`} />
+        <meta property="og:image" content={`${domain}/photos/cover_row.jpg`} />
+        <meta name="twitter:image" content={`${domain}/photos/cover_row.jpg`} />
         {/* opengraph는 배포 이후 URL로 다시 수정하시면 좋습니다. */}
       </Head>
       <Home photo={photo} explict={f === '1'} hideBus={b !== '1'} />

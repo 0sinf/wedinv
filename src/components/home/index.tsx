@@ -571,7 +571,7 @@ const Home = ({
       location:
         '루이비스 웨딩홀 중구점 대한민국 서울시 중구 청파로 463 한국경제신문사 루이비스웨딩 18F, 04505',
       // FIXME: Fis url
-      url: 'https://jiwon.chulwon.kim/',
+      url: 'https://wedinv-eight.vercel.app/',
       geo: { lat: 37.560103, lon: 126.967195 },
       categories: ['wedding'],
       status: 'CONFIRMED',
