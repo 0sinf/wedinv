@@ -1,12 +1,12 @@
-import Head from "next/head";
-import React from "react";
+import Head from 'next/head';
+import React from 'react';
 
-import Home from "@/components/home";
+import Home from '@/components/home';
 
-import { useRouter } from "next/router";
+import { useRouter } from 'next/router';
 
-const GROOM = "김철원";
-const BRIDE = "임지원";
+const GROOM = '성도환';
+const BRIDE = '정다운';
 
 const HomePage = ({ photo }: { photo: number[] }) => {
   const { query } = useRouter();
@@ -21,10 +21,19 @@ const HomePage = ({ photo }: { photo: number[] }) => {
   //https://jiwon.chulwon.kim/?f=1 => 친구용
   //https://jiwon.chulwon.kim/?b=1 => 부모님용 그렇지만 버스정보가 숨겨짐
 
-  const title = `${GROOM} ♡ ${BRIDE} 2023년 12월 17일에 결혼합니다.`;
+  // 다운님 버전
+  /**
+   * / 부모님용 기본버전
+   * /?f=1 친구용
+   * /?b=1 다운님 부모님 (전세버스)
+   */
+
+  const title = `${GROOM} ♡ ${BRIDE} 2024년 5월 5일에 결혼합니다.`;
   const subtitle = `${GROOM} ♡ ${BRIDE} 청첩장`;
-  const description = `12월 17일 낮 12시 @ 그래비티 서울 판교 오토그래프 컬렉션 - 판교역`;
-  const domain = "https://jiwon.chulwon.kim";
+  const description = `5월 5일 낮 1시 30분 @ 루이비스 웨딩홀 중구점 - 충정로역`;
+
+  // FIXME: 도메인 변경
+  const domain = 'https://jiwon.chulwon.kim';
   return (
     <>
       <Head>
@@ -51,11 +60,7 @@ const HomePage = ({ photo }: { photo: number[] }) => {
         <meta name="twitter:image" content={`${domain}/photos/cover_min.jpg`} />
         {/* opengraph는 배포 이후 URL로 다시 수정하시면 좋습니다. */}
       </Head>
-      <Home
-        photo={photo}
-        explict={f === "1"}
-        hideBus={f !== "1" && b !== "1"}
-      />
+      <Home photo={photo} explict={f === '1'} hideBus={b !== '1'} />
     </>
   );
 };
@@ -72,13 +77,9 @@ export async function getServerSideProps() {
 
   //가로사진 1장, 세로사진 6장, 가로사진 1장, 세로사진 4장, 가로사진 1장
 
-  const extract = [
-    1,
-    ...extract_portrait.slice(0, 6),
-    ...[extract_landscape[0]],
-    ...extract_portrait.slice(6, 10),
-    ...[extract_landscape[1]],
-  ]; //1번 사진은 고정, 나머지는 랜덤으로 고른 사진중에 배치.
+  const extract = Array(11)
+    .fill(0)
+    .map((_, idx) => idx + 1); //1번 사진은 고정, 나머지는 랜덤으로 고른 사진중에 배치.
 
   console.log(extract);
 
