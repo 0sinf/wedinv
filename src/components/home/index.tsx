@@ -684,7 +684,7 @@ const Home = ({
           <li key={i}>
             <img
               role="button"
-              src={`/photos/t${i}.jpg`}
+              src={`/photos/t${i}.webp`}
               style={{ cursor: 'pointer' }}
               loading="lazy"
               onClick={() => handlePhotoClick(i)}
