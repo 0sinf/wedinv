@@ -67,6 +67,7 @@ const CoverPicWrap = styled.div`
 `;
 
 const GreetingP = styled.p`
+  /* font-size: 13px; */
   margin: 30px 0;
 `;
 
@@ -639,7 +640,9 @@ const Home = ({
         <br />
         꿈을 펼칠 수 있도록 서로에게 날개가 되어줄 한 사람
         <br />
-        그 두 사람이 이제 부부의 연으로 한 길을 걸어가고자 합니다.
+        그 두 사람이 이제 부부의 연으로
+        <br />
+        한 길을 걸어가고자 합니다.
         <br />
         오로지 믿음과 사랑만을 약속하는 귀한 날에
         <br />
@@ -703,7 +706,7 @@ const Home = ({
       )}
       <SectionHr />
       <SectionHeader>🧭 오시는 길</SectionHeader>
-      <Image src={mapPic} width="452px" height="416px" alt="약도" />
+      <Image src={mapPic} width="750px" height="893px" alt="약도" />
       {/* 약도는 결혼식장 위치에 맞게 수정해주세요. 보통 식장에서 줍니다. */}
 
       <p style={{ wordBreak: 'keep-all' }}>
